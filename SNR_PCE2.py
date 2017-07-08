@@ -4,7 +4,7 @@ from PIL import Image
 import cv2
 import scipy.io as sio
 
-NI=21
+NI=9
 #定义函数
 
 def fftshift(x):
@@ -68,14 +68,14 @@ Method=2
 
 #读取图片
 img=[]
-for i in range (1,22):
+for i in range (1,NI+1):
     img.append(cv2.imread(str(i)+'.bmp',0))
 
 img=np.array(img,dtype=np.double)
 
 #求滤波器初始值
 lens1=np.exp(-1j*2*np.pi/(lamda*2*f1)*(np.power(x,2)*np.power(np.cos(sita),2)+np.power(y,2)))
-IMG=np.exp(-1j*(img[0]/255*2*np.pi))
+IMG=np.exp(-1j*(img[4]/255*2*np.pi))
 IMG=np.fft.fftshift(np.fft.fft2(np.fft.fftshift(IMG)))
 IMG=np.fft.fftshift(np.fft.ifft2(np.fft.fftshift(np.multiply(IMG,H1))))
 IMG=np.multiply(IMG,lens1)
@@ -128,23 +128,23 @@ a=tf.reduce_max(U,1)
 Rmax=[0]*NI
 place=tf.argmax(U,axis=1)
 place2=tf.to_int32(place)
-Ec_half=[0]*NI
-half_sum2=[0]*NI
-SNR=[0]*NI
+#Ec_half=[0]*NI
+#half_sum2=[0]*NI
+#SNR=[0]*NI
 for i in range(NI):
     Rmax[i]=rr[i][place2[i]]
-    b=tf.where(U[i]<(0.5*a[i]))
-    half_sum=tf.size(b)
-    half_sum2[i]=tf.to_float(half_sum)
-    Ec_half[i]=tf.subtract(tf.reduce_sum(tf.pow(tf.add((tf.negative(tf.nn.relu(tf.negative(tf.subtract(U[i],0.5*a[i]))))),0.5*a[i]),2)),(tf.multiply(tf.pow((0.5*a[i]),2),(1166400-half_sum2[i]))))
-    SNR[i]=a[i]/tf.sqrt(Ec_half[i]/half_sum2[i])
+#    b=tf.where(U[i]<(0.5*a[i]))
+#    half_sum=tf.size(b)
+#    half_sum2[i]=tf.to_float(half_sum)
+#    Ec_half[i]=tf.subtract(tf.reduce_sum(tf.pow(tf.add((tf.negative(tf.nn.relu(tf.negative(tf.subtract(U[i],0.5*a[i]))))),0.5*a[i]),2)),(tf.multiply(tf.pow((0.5*a[i]),2),(1166400-half_sum2[i]))))
+#    SNR[i]=a[i]/tf.sqrt(Ec_half[i]/half_sum2[i])
 
 
 RR=Rmax
-SNR2=tf.subtract(SNR,tf.nn.relu(tf.subtract(SNR,200)))
-loss=tf.concat([RR,SNR2],axis=0)
-#loss=RR
-train=tf.train.GradientDescentOptimizer(learning_rate=500).minimize(tf.negative(tf.log(loss)))
+#SNR2=tf.subtract(SNR,tf.nn.relu(tf.subtract(SNR,200)))
+#loss=tf.concat([RR,SNR2],axis=0)
+loss=RR
+train=tf.train.GradientDescentOptimizer(learning_rate=1e+1).minimize(tf.negative(tf.log(loss)))
 
 
 
@@ -177,5 +177,5 @@ sio.savemat('2f.mat',{'FIL':sess.run(hh)})
 
 import matplotlib.pyplot as plt
 b=sess.run(Uout2,feed_dict={Input:U21})
-plt.subplot(111),plt.imshow(b[18],'gray'),plt.title('original')
+plt.subplot(111),plt.imshow(b[4],'gray'),plt.title('original')
 plt.show()
